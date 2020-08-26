@@ -68,9 +68,14 @@ func NewEventsAPIServer(ctx context.Context, listenAddr string, conf Config) (*E
 		},
 	))
 
+	sm := http.NewServeMux()
+	sm.HandleFunc("/", a.httpHandler)
+	sm.HandleFunc("/ping", a.httpPing)
+
 	a.http = &http.Server{
-		Addr:         listenAddr,
-		Handler:      http.HandlerFunc(a.httpHandler),
+		Addr:    listenAddr,
+		Handler: sm,
+		// Handler:      http.HandlerFunc(a.httpHandler),
 		ErrorLog:     zap.NewStdLog(conf.Logger),
 		TLSConfig:    conf.EventsAPI.TLSConf,
 		ReadTimeout:  conf.EventsAPI.ReadTimeout,
@@ -128,6 +133,11 @@ func (a *EventsAPIServer) httpHandler(w http.ResponseWriter, r *http.Request) {
 			zap.String("type", eventsAPIEvent.Type),
 		)
 	}
+}
+
+func (a *EventsAPIServer) httpPing(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOk)
+	w.Write([]byte("pong"))
 }
 
 func (a *EventsAPIServer) handleURLVerification(req []byte, resp http.ResponseWriter) {
