@@ -73,9 +73,8 @@ func NewEventsAPIServer(ctx context.Context, listenAddr string, conf Config) (*E
 	sm.HandleFunc("/ping", a.httpPing)
 
 	a.http = &http.Server{
-		Addr:    listenAddr,
-		Handler: sm,
-		// Handler:      http.HandlerFunc(a.httpHandler),
+		Addr:         listenAddr,
+		Handler:      sm,
 		ErrorLog:     zap.NewStdLog(conf.Logger),
 		TLSConfig:    conf.EventsAPI.TLSConf,
 		ReadTimeout:  conf.EventsAPI.ReadTimeout,
