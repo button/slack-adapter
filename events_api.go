@@ -135,7 +135,7 @@ func (a *EventsAPIServer) httpHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *EventsAPIServer) httpPing(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOk)
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("pong"))
 }
 
