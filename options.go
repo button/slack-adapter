@@ -3,6 +3,7 @@ package slack
 import (
 	"crypto/tls"
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/slack-go/slack"
@@ -20,6 +21,10 @@ type Config struct {
 	Debug             bool
 	Logger            *zap.Logger
 	SlackAPIURL       string // defaults to github.com/slack-go/slack.APIURL but can be changed for unit tests
+
+	// Allow for passing in a custom server
+	// Server http.Handler
+	Server *http.ServeMux
 
 	// SendMsgParams contains settings that are applied to all messages sent
 	// by the BotAdapter.

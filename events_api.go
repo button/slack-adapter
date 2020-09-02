@@ -29,7 +29,9 @@ type EventsAPIServer struct {
 // If you want to use the slack RTM API instead (i.e. using web sockets), you
 // should use the slack.Adapter(…) function instead.
 func EventsAPIAdapter(listenAddr, token, verificationToken string, opts ...Option) joe.Module {
+	fmt.Println("HI!!!")
 	return joe.ModuleFunc(func(joeConf *joe.Config) error {
+		fmt.Println("OPTS", opts)
 		conf, err := newConf(token, joeConf, opts)
 		if err != nil {
 			return err
@@ -50,6 +52,8 @@ func EventsAPIAdapter(listenAddr, token, verificationToken string, opts ...Optio
 // using the events API. Note that you will usually configure this type of slack
 // adapter as joe.Module (i.e. using the EventsAPIAdapter function of this package).
 func NewEventsAPIServer(ctx context.Context, listenAddr string, conf Config) (*EventsAPIServer, error) {
+	var httpServer *http.ServeMux
+
 	events := make(chan slackEvent)
 	client := slack.New(conf.Token, conf.slackOptions()...)
 	adapter, err := newAdapter(ctx, client, nil, events, conf)
@@ -68,13 +72,20 @@ func NewEventsAPIServer(ctx context.Context, listenAddr string, conf Config) (*E
 		},
 	))
 
-	sm := http.NewServeMux()
-	sm.HandleFunc("/", a.httpHandler)
-	sm.HandleFunc("/ping", a.httpPing)
+	if conf.Server != nil {
+		fmt.Println("SERVER SET")
+		httpServer = conf.Server
+	} else {
+		fmt.Println("SERVER NOT SET")
+		httpServer = http.NewServeMux()
+	}
+
+	httpServer.HandleFunc("/", a.httpHandler)
+	httpServer.HandleFunc("/ping", a.httpPing)
 
 	a.http = &http.Server{
 		Addr:         listenAddr,
-		Handler:      sm,
+		Handler:      httpServer,
 		ErrorLog:     zap.NewStdLog(conf.Logger),
 		TLSConfig:    conf.EventsAPI.TLSConf,
 		ReadTimeout:  conf.EventsAPI.ReadTimeout,
