@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/go-chi/chi"
 	"github.com/slack-go/slack"
 	"go.uber.org/zap"
 )
@@ -20,6 +21,9 @@ type Config struct {
 	Debug             bool
 	Logger            *zap.Logger
 	SlackAPIURL       string // defaults to github.com/slack-go/slack.APIURL but can be changed for unit tests
+
+	// Allow for passing in a custom Chi router
+	HttpRouter *chi.Mux
 
 	// SendMsgParams contains settings that are applied to all messages sent
 	// by the BotAdapter.

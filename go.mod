@@ -3,6 +3,7 @@ module github.com/go-joe/slack-adapter/v2
 go 1.14
 
 require (
+	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-joe/joe v0.9.0
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/slack-go/slack v0.6.5

@@ -68,17 +68,26 @@ func NewEventsAPIServer(ctx context.Context, listenAddr string, conf Config) (*E
 		},
 	))
 
-	sm := http.NewServeMux()
-	sm.HandleFunc("/", a.httpHandler)
-	sm.HandleFunc("/ping", a.httpPing)
+	if conf.HttpRouter != nil {
+		conf.HttpRouter.Handle("/", http.HandlerFunc(a.httpHandler))
 
-	a.http = &http.Server{
-		Addr:         listenAddr,
-		Handler:      sm,
-		ErrorLog:     zap.NewStdLog(conf.Logger),
-		TLSConfig:    conf.EventsAPI.TLSConf,
-		ReadTimeout:  conf.EventsAPI.ReadTimeout,
-		WriteTimeout: conf.EventsAPI.WriteTimeout,
+		a.http = &http.Server{
+			Addr:         listenAddr,
+			Handler:      conf.HttpRouter,
+			ErrorLog:     zap.NewStdLog(conf.Logger),
+			TLSConfig:    conf.EventsAPI.TLSConf,
+			ReadTimeout:  conf.EventsAPI.ReadTimeout,
+			WriteTimeout: conf.EventsAPI.WriteTimeout,
+		}
+	} else {
+		a.http = &http.Server{
+			Addr:         listenAddr,
+			Handler:      http.HandlerFunc(a.httpHandler),
+			ErrorLog:     zap.NewStdLog(conf.Logger),
+			TLSConfig:    conf.EventsAPI.TLSConf,
+			ReadTimeout:  conf.EventsAPI.ReadTimeout,
+			WriteTimeout: conf.EventsAPI.WriteTimeout,
+		}
 	}
 
 	return a, nil
@@ -132,11 +141,6 @@ func (a *EventsAPIServer) httpHandler(w http.ResponseWriter, r *http.Request) {
 			zap.String("type", eventsAPIEvent.Type),
 		)
 	}
-}
-
-func (a *EventsAPIServer) httpPing(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("pong"))
 }
 
 func (a *EventsAPIServer) handleURLVerification(req []byte, resp http.ResponseWriter) {
