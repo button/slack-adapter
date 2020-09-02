@@ -50,8 +50,6 @@ func EventsAPIAdapter(listenAddr, token, verificationToken string, opts ...Optio
 // using the events API. Note that you will usually configure this type of slack
 // adapter as joe.Module (i.e. using the EventsAPIAdapter function of this package).
 func NewEventsAPIServer(ctx context.Context, listenAddr string, conf Config) (*EventsAPIServer, error) {
-	var httpServer *http.ServeMux
-
 	events := make(chan slackEvent)
 	client := slack.New(conf.Token, conf.slackOptions()...)
 	adapter, err := newAdapter(ctx, client, nil, events, conf)
@@ -70,24 +68,27 @@ func NewEventsAPIServer(ctx context.Context, listenAddr string, conf Config) (*E
 		},
 	))
 
-	if conf.Server != nil {
-		fmt.Println("SERVER SET")
-		httpServer = conf.Server
+	if conf.HttpRouter != nil {
+		conf.HttpRouter.Handle("/", http.HandlerFunc(a.httpHandler))
+		conf.HttpRouter.Handle("/pong", a.httpPing)
+
+		a.http = &http.Server{
+			Addr:         listenAddr,
+			Handler:      conf.HttpRouter,
+			ErrorLog:     zap.NewStdLog(conf.Logger),
+			TLSConfig:    conf.EventsAPI.TLSConf,
+			ReadTimeout:  conf.EventsAPI.ReadTimeout,
+			WriteTimeout: conf.EventsAPI.WriteTimeout,
+		}
 	} else {
-		fmt.Println("SERVER NOT SET")
-		httpServer = http.NewServeMux()
-	}
-
-	httpServer.HandleFunc("/", a.httpHandler)
-	httpServer.HandleFunc("/ping", a.httpPing)
-
-	a.http = &http.Server{
-		Addr:         listenAddr,
-		Handler:      httpServer,
-		ErrorLog:     zap.NewStdLog(conf.Logger),
-		TLSConfig:    conf.EventsAPI.TLSConf,
-		ReadTimeout:  conf.EventsAPI.ReadTimeout,
-		WriteTimeout: conf.EventsAPI.WriteTimeout,
+		a.http = &http.Server{
+			Addr:         listenAddr,
+			Handler:      http.HandlerFunc(a.httpHandler),
+			ErrorLog:     zap.NewStdLog(conf.Logger),
+			TLSConfig:    conf.EventsAPI.TLSConf,
+			ReadTimeout:  conf.EventsAPI.ReadTimeout,
+			WriteTimeout: conf.EventsAPI.WriteTimeout,
+		}
 	}
 
 	return a, nil
