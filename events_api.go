@@ -70,7 +70,6 @@ func NewEventsAPIServer(ctx context.Context, listenAddr string, conf Config) (*E
 
 	if conf.HttpRouter != nil {
 		conf.HttpRouter.Handle("/", http.HandlerFunc(a.httpHandler))
-		conf.HttpRouter.Handle("/pong", a.httpPing)
 
 		a.http = &http.Server{
 			Addr:         listenAddr,
@@ -142,11 +141,6 @@ func (a *EventsAPIServer) httpHandler(w http.ResponseWriter, r *http.Request) {
 			zap.String("type", eventsAPIEvent.Type),
 		)
 	}
-}
-
-func (a *EventsAPIServer) httpPing(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("pong"))
 }
 
 func (a *EventsAPIServer) handleURLVerification(req []byte, resp http.ResponseWriter) {
