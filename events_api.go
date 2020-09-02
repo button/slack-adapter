@@ -29,9 +29,7 @@ type EventsAPIServer struct {
 // If you want to use the slack RTM API instead (i.e. using web sockets), you
 // should use the slack.Adapter(…) function instead.
 func EventsAPIAdapter(listenAddr, token, verificationToken string, opts ...Option) joe.Module {
-	fmt.Println("HI!!!")
 	return joe.ModuleFunc(func(joeConf *joe.Config) error {
-		fmt.Println("OPTS", opts)
 		conf, err := newConf(token, joeConf, opts)
 		if err != nil {
 			return err
